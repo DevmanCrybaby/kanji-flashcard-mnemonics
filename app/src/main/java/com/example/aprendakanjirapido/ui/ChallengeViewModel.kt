@@ -24,7 +24,8 @@ enum class ScreenState {
     CHALLENGE_GRADE,
     ROUND_SUMMARY,
     DEFEAT,
-    VICTORY
+    VICTORY,
+    TUTORIAL_COMPLETED
 }
 
 class ChallengeViewModel(application: Application) : AndroidViewModel(application) {
@@ -155,13 +156,13 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
         if (challengeQueue.isEmpty()) {
             if (_currentRound.value == 1) {
                 if (failedKanjis.isEmpty()) {
-                    _screenState.value = ScreenState.VICTORY
+                    _screenState.value = ScreenState.TUTORIAL_COMPLETED
                 } else {
                     _screenState.value = ScreenState.ROUND_SUMMARY
                 }
             } else {
                 if (failedKanjis.isEmpty()) {
-                    _screenState.value = ScreenState.VICTORY
+                    _screenState.value = ScreenState.TUTORIAL_COMPLETED
                 } else {
                     _totalFailedTotalCount.value = failedKanjis.sumOf { it.failCount }
                     _screenState.value = ScreenState.DEFEAT
