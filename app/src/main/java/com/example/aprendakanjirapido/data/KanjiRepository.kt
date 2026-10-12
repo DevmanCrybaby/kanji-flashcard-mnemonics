@@ -9,7 +9,7 @@ object KanjiRepository {
     fun loadKanjis(context: Context): List<KanjiItem> {
         val list = mutableListOf<KanjiItem>()
         try {
-            val inputStream = context.assets.open("kanji_damage_componentes.csv")
+            val inputStream = context.assets.open("tutorial_kanji_damage_componentes.csv")
             val reader = BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8))
             val lines = reader.readLines()
             val dataLines = if (lines.isNotEmpty() && lines[0].startsWith("Kanji")) lines.drop(1) else lines

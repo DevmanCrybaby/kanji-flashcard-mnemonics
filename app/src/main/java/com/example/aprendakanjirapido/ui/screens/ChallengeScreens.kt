@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.example.aprendakanjirapido.ui.ChallengeViewModel
 import com.example.aprendakanjirapido.ui.ScreenState
 
@@ -49,6 +50,7 @@ fun ChallengeAppRoot(viewModel: ChallengeViewModel) {
             ScreenState.CHALLENGE_REVIEW -> {
                 if (currentKanji != null) {
                     ReviewScreen(
+                        viewModel = viewModel,
                         kanjiItem = currentKanji!!,
                         timeLeft = timeLeft,
                         onSkip = { viewModel.skipReviewCard() }
@@ -61,6 +63,7 @@ fun ChallengeAppRoot(viewModel: ChallengeViewModel) {
             ScreenState.CHALLENGE_RECALL -> {
                 if (currentKanji != null) {
                     RecallScreen(
+                        viewModel = viewModel,
                         round = currentRound,
                         kanjiItem = currentKanji!!,
                         timeLeft = timeLeft,
@@ -71,6 +74,7 @@ fun ChallengeAppRoot(viewModel: ChallengeViewModel) {
             ScreenState.CHALLENGE_GRADE -> {
                 if (currentKanji != null) {
                     GradeScreen(
+                        viewModel = viewModel,
                         round = currentRound,
                         kanjiItem = currentKanji!!,
                         timeLeft = timeLeft,

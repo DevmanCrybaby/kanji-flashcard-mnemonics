@@ -12,6 +12,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -62,7 +63,8 @@ fun ChallengeTransitionScreen(viewModel: ChallengeViewModel, onStartChallenge: (
 }
 
 @Composable
-fun RecallScreen(round: Int, kanjiItem: KanjiItem, timeLeft: Int, onFlip: () -> Unit) {
+fun RecallScreen(viewModel: ChallengeViewModel, round: Int, kanjiItem: KanjiItem, timeLeft: Int, onFlip: () -> Unit) {
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -70,6 +72,23 @@ fun RecallScreen(round: Int, kanjiItem: KanjiItem, timeLeft: Int, onFlip: () -> 
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Barra de progresso visual
+            LinearProgressIndicator(
+                progress = { viewModel.challengeProgress }, // ou challengeProgress
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            )
+
+            // Texto indicativo (ex: "Cartão 4 de 10")
+            Text(
+                text = "Progresso: ${viewModel.challengeCurrentIndex} / 10",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = "Rodada $round - Recordação (3s)", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(8.dp))
@@ -104,7 +123,7 @@ fun RecallScreen(round: Int, kanjiItem: KanjiItem, timeLeft: Int, onFlip: () -> 
 }
 
 @Composable
-fun GradeScreen(round: Int, kanjiItem: KanjiItem, timeLeft: Int, onGrade: (Boolean) -> Unit) {
+fun GradeScreen(viewModel: ChallengeViewModel, round: Int, kanjiItem: KanjiItem, timeLeft: Int, onGrade: (Boolean) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -112,6 +131,23 @@ fun GradeScreen(round: Int, kanjiItem: KanjiItem, timeLeft: Int, onGrade: (Boole
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Barra de progresso visual
+            LinearProgressIndicator(
+                progress = { viewModel.challengeProgress }, // ou challengeProgress
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            )
+
+            // Texto indicativo (ex: "Cartão 4 de 10")
+            Text(
+                text = "Progresso: ${viewModel.challengeCurrentIndex} / 10",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = "Rodada $round - Avaliação (${timeLeft}s)", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(16.dp))

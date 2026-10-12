@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,7 +59,7 @@ fun ReviewTransitionScreen(viewModel: ChallengeViewModel, onStartReview: () -> U
     }
 }
 @Composable
-fun ReviewScreen(kanjiItem: KanjiItem, timeLeft: Int, onSkip: () -> Unit) {
+fun ReviewScreen(viewModel: ChallengeViewModel, kanjiItem: KanjiItem, timeLeft: Int, onSkip: () -> Unit) {
 
     Column(
         modifier = Modifier
@@ -67,6 +68,23 @@ fun ReviewScreen(kanjiItem: KanjiItem, timeLeft: Int, onSkip: () -> Unit) {
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Barra de progresso visual
+            LinearProgressIndicator(
+                progress = { viewModel.reviewProgress }, // ou challengeProgress
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            )
+
+            // Texto indicativo (ex: "Cartão 4 de 10")
+            Text(
+                text = "Progresso: ${viewModel.reviewCurrentIndex} / 10",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = "Etapa de Revisão (10s)", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(8.dp))

@@ -60,12 +60,29 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
     val recallDurationSeconds = 3
     val reviewDurationSeconds = 10
     val gradeDurationSeconds = 2
+    private val totalReviewSize = 10
+    private var initialChallengeQueueSize = 10
 
     private var timerJob: Job? = null
 
     init {
         loadData()
     }
+
+
+    // Retorna uma porcentagem de 0.0 a 1.0 para a barra de progresso
+    val reviewProgress: Float
+        get() {
+            val remaining = reviewQueue.size
+            val reviewed = totalReviewSize - remaining
+            return (reviewed.toFloat() / totalReviewSize.toFloat()).coerceIn(0f, 1f)
+        }
+
+    val reviewCurrentIndex: Int
+        get() {
+            val remaining = reviewQueue.size
+            return (totalReviewSize - remaining).coerceIn(1, totalReviewSize)
+        }
 
     private fun loadData() {
         val loaded = KanjiRepository.loadKanjis(getApplication())
@@ -75,6 +92,19 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
         _kanjis.clear()
         _kanjis.addAll(loaded.take(10))
     }
+
+    val challengeProgress: Float
+        get() {
+            val remaining = challengeQueue.size
+            val processed = initialChallengeQueueSize - remaining
+            return (processed.toFloat() / initialChallengeQueueSize.toFloat()).coerceIn(0f, 1f)
+        }
+
+    val challengeCurrentIndex: Int
+        get() {
+            val remaining = challengeQueue.size
+            return (initialChallengeQueueSize - remaining ).coerceIn(1, initialChallengeQueueSize)
+        }
 
     fun startChallengeSetup() {
         _screenState.value = ScreenState.MNEMONIC_TRANSITION
