@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.aprendakanjirapido.model.KanjiItem
 import com.example.aprendakanjirapido.ui.ChallengeViewModel
 import com.example.aprendakanjirapido.ui.ScreenState
 
@@ -18,6 +19,8 @@ fun ChallengeAppRoot(viewModel: ChallengeViewModel) {
     val currentRound by viewModel.currentRound.collectAsState()
     val totalFailedCount by viewModel.totalFailedTotalCount.collectAsState()
 
+    var editingKanji by remember { mutableStateOf<KanjiItem?>(null) }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -29,7 +32,7 @@ fun ChallengeAppRoot(viewModel: ChallengeViewModel) {
             ScreenState.MNEMONIC_TRANSITION -> {
                 MnemonicTransition(onStartMnemonic = { viewModel.proceedToMnemonicCreation() })
             }
-            ScreenState.MNEMONIC_CREATION -> {
+            ScreenState.MNEMONIC_CREATION, ScreenState.DISCOVER_MNEMONIC -> {
                 if (kanjis.isNotEmpty() && mnemonicIndex in kanjis.indices) {
                     MnemonicScreen(
                         index = mnemonicIndex,
@@ -40,12 +43,13 @@ fun ChallengeAppRoot(viewModel: ChallengeViewModel) {
                         },
                         onBack = { currentText ->
                             viewModel.previousMnemonic(mnemonicIndex, currentText)
-                        }
+                        },
+                        onExit = { viewModel.exitDiscovery() }
                     )
                 }
             }
             ScreenState.REVIEW_TRANSITION -> {
-                ReviewTransitionScreen(viewModel = viewModel, onStartReview = {viewModel.proceedToReview() })
+                ReviewTransitionScreen(viewModel = viewModel, onStartReview = { viewModel.proceedToReview() })
             }
             ScreenState.CHALLENGE_REVIEW -> {
                 if (currentKanji != null) {
@@ -58,7 +62,7 @@ fun ChallengeAppRoot(viewModel: ChallengeViewModel) {
                 }
             }
             ScreenState.CHALLENGE_TRANSITION -> {
-                ChallengeTransitionScreen(viewModel = viewModel, onStartChallenge = {viewModel.proceedToChallenge() })
+                ChallengeTransitionScreen(viewModel = viewModel, onStartChallenge = { viewModel.proceedToChallenge() })
             }
             ScreenState.CHALLENGE_RECALL -> {
                 if (currentKanji != null) {
@@ -93,19 +97,46 @@ fun ChallengeAppRoot(viewModel: ChallengeViewModel) {
                     onRestart = { viewModel.resetApp() }
                 )
             }
-
             ScreenState.TUTORIAL_COMPLETED -> {
                 TutorialCompletedScreen(
-                    onOpenMethodology = { /* Botão morto por enquanto */ },
-                    onContinueChallenge = { /* Botão morto por enquanto */ }
+                    onContinueChallenge = { viewModel.goToMainHub() }
                 )
             }
-
+            ScreenState.MAIN_HUB -> {
+                MainHubScreen(viewModel = viewModel)
+            }
+            ScreenState.GLOBAL_REVIEW -> {
+                GlobalReviewScreen(
+                    currentIndex = viewModel.globalReviewIndex,
+                    totalCount = viewModel.globalReviewTotal,
+                    kanjiItem = currentKanji,
+                    canGoBack = viewModel.canGoBackGlobalReview,
+                    onPrevious = { viewModel.previousGlobalReviewCard() },
+                    onNext = { viewModel.nextGlobalReviewCard() },
+                    onExit = { viewModel.exitGlobalReview() },
+                    onEditMnemonic = { item -> editingKanji = item }
+                )
+            }
             ScreenState.VICTORY -> {
                 VictoryScreen(
-                    onRestart = { viewModel.resetApp() }
+                    onRestart = { viewModel.goToMainHub() }
                 )
             }
+            else -> {
+                WelcomeScreen(onStart = { viewModel.startChallengeSetup() })
+            }
+        }
+
+        // Edit Mnemonic Dialog
+        if (editingKanji != null) {
+            EditMnemonicDialog(
+                kanjiItem = editingKanji!!,
+                onDismiss = { editingKanji = null },
+                onSave = { newMnemonic ->
+                    viewModel.updateMnemonic(editingKanji!!.kanji, newMnemonic)
+                    editingKanji = null
+                }
+            )
         }
     }
 }

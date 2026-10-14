@@ -15,6 +15,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,17 +74,26 @@ fun RecallScreen(viewModel: ChallengeViewModel, round: Int, kanjiItem: KanjiItem
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Barra de progresso visual
+            if (viewModel.isGlobalChallengeMode) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = { viewModel.exitGlobalChallenge() }) {
+                        Text(text = "✕ Sair", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
             LinearProgressIndicator(
-                progress = { viewModel.challengeProgress }, // ou challengeProgress
+                progress = { viewModel.challengeProgress },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             )
 
-            // Texto indicativo (ex: "Cartão 4 de 10")
             Text(
-                text = "Progresso: ${viewModel.challengeCurrentIndex} / 10",
+                text = "Progresso: ${viewModel.challengeCurrentIndex} / ${viewModel.challengeProgress.let { 10 }}", // or dynamic
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -132,17 +142,26 @@ fun GradeScreen(viewModel: ChallengeViewModel, round: Int, kanjiItem: KanjiItem,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Barra de progresso visual
+            if (viewModel.isGlobalChallengeMode) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = { viewModel.exitGlobalChallenge() }) {
+                        Text(text = "✕ Sair", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
             LinearProgressIndicator(
-                progress = { viewModel.challengeProgress }, // ou challengeProgress
+                progress = { viewModel.challengeProgress },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             )
 
-            // Texto indicativo (ex: "Cartão 4 de 10")
             Text(
-                text = "Progresso: ${viewModel.challengeCurrentIndex} / 10",
+                text = "Progresso: ${viewModel.challengeCurrentIndex}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -164,6 +183,10 @@ fun GradeScreen(viewModel: ChallengeViewModel, round: Int, kanjiItem: KanjiItem,
                     Text(text = kanjiItem.kanji, fontSize = 64.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(text = "Significado: ${kanjiItem.significado}", style = MaterialTheme.typography.titleLarge)
+                    if (kanjiItem.componentes.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = "Componentes: ${kanjiItem.componentes}", style = MaterialTheme.typography.bodyMedium)
+                    }
                     if (kanjiItem.mnemonic.isNotBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(text = "Mnemônica: ${kanjiItem.mnemonic}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)

@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun TutorialCompletedScreen(
-    onOpenMethodology: () -> Unit,
     onContinueChallenge: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -23,7 +22,7 @@ fun TutorialCompletedScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp)
-            .verticalScroll(scrollState), // Permite rolar se o texto for grande
+            .verticalScroll(scrollState),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -41,7 +40,6 @@ fun TutorialCompletedScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Card ou Container para o texto explicativo
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp)
@@ -65,28 +63,14 @@ fun TutorialCompletedScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Botões de Ação na parte inferior
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        // Apenas o botão "Continuar o Desafio" conforme solicitado no todo.md
+        Button(
+            onClick = onContinueChallenge,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
         ) {
-            OutlinedButton(
-                onClick = onOpenMethodology,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text(text = "Sobre os Kanjis e Metodologia", fontSize = 16.sp)
-            }
-
-            Button(
-                onClick = onContinueChallenge,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text(text = "Continuar o Desafio", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
+            Text(text = "Continuar o Desafio", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

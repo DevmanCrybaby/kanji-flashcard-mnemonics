@@ -25,18 +25,32 @@ enum class ScreenState {
     ROUND_SUMMARY,
     DEFEAT,
     VICTORY,
-    TUTORIAL_COMPLETED
+    TUTORIAL_COMPLETED,
+    MAIN_HUB,
+    GLOBAL_REVIEW,
+    DISCOVER_MNEMONIC,
+    DISCOVER_REVIEW,
+    DISCOVER_CHALLENGE
 }
 
 class ChallengeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val prefs = application.getSharedPreferences("kanji_prefs", Context.MODE_PRIVATE)
 
+    val reviewDurationSeconds = 10
+    val recallDurationSeconds = 3
+    val gradeDurationSeconds = 2
+
+    var isGlobalChallengeMode = false
+        private set
+
     private val _screenState = MutableStateFlow(ScreenState.WELCOME)
     val screenState: StateFlow<ScreenState> = _screenState.asStateFlow()
 
     private val _kanjis = mutableListOf<KanjiItem>()
     val kanjis: List<KanjiItem> get() = _kanjis
+
+    private val fullKanjiList = mutableListOf<KanjiItem>()
 
     private val _mnemonicIndex = MutableStateFlow(0)
     val mnemonicIndex: StateFlow<Int> = _mnemonicIndex.asStateFlow()
@@ -48,6 +62,14 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
     private val challengeQueue = mutableListOf<KanjiItem>()
     private val failedKanjis = mutableListOf<KanjiItem>()
 
+    // Global Review state with index support
+    private val globalReviewList = mutableListOf<KanjiItem>()
+    private var globalReviewCurrentIndex = 0
+
+    val globalReviewIndex: Int get() = globalReviewCurrentIndex + 1
+    val globalReviewTotal: Int get() = globalReviewList.size.coerceAtLeast(1)
+    val canGoBackGlobalReview: Boolean get() = globalReviewCurrentIndex > 0
+
     private val _currentKanji = MutableStateFlow<KanjiItem?>(null)
     val currentKanji: StateFlow<KanjiItem?> = _currentKanji.asStateFlow()
 
@@ -57,20 +79,14 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
     private val _totalFailedTotalCount = MutableStateFlow(0)
     val totalFailedTotalCount: StateFlow<Int> = _totalFailedTotalCount.asStateFlow()
 
-    val recallDurationSeconds = 3
-    val reviewDurationSeconds = 10
-    val gradeDurationSeconds = 2
+    private val _seenKanjisCount = MutableStateFlow(10)
+    val seenKanjisCount: StateFlow<Int> = _seenKanjisCount.asStateFlow()
+
+    val totalKanjisCount: Int get() = fullKanjiList.size.coerceAtLeast(10)
+
     private val totalReviewSize = 10
     private var initialChallengeQueueSize = 10
 
-    private var timerJob: Job? = null
-
-    init {
-        loadData()
-    }
-
-
-    // Retorna uma porcentagem de 0.0 a 1.0 para a barra de progresso
     val reviewProgress: Float
         get() {
             val remaining = reviewQueue.size
@@ -84,15 +100,6 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
             return (totalReviewSize - remaining).coerceIn(1, totalReviewSize)
         }
 
-    private fun loadData() {
-        val loaded = KanjiRepository.loadKanjis(getApplication())
-        for (item in loaded) {
-            item.mnemonic = prefs.getString("mnemonic_${item.kanji}", "") ?: ""
-        }
-        _kanjis.clear()
-        _kanjis.addAll(loaded.take(10))
-    }
-
     val challengeProgress: Float
         get() {
             val remaining = challengeQueue.size
@@ -103,16 +110,50 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
     val challengeCurrentIndex: Int
         get() {
             val remaining = challengeQueue.size
-            return (initialChallengeQueueSize - remaining ).coerceIn(1, initialChallengeQueueSize)
+            return (initialChallengeQueueSize - remaining).coerceIn(1, initialChallengeQueueSize)
         }
+
+    private var timerJob: Job? = null
+
+    init {
+        loadInitialData()
+    }
+
+    private fun loadInitialData() {
+        val full = KanjiRepository.loadKanjis(getApplication(), "lista_kanji_damage_componentes.csv")
+        fullKanjiList.clear()
+        fullKanjiList.addAll(full)
+
+        val tutorial = KanjiRepository.loadKanjis(getApplication(), "tutorial_kanji_damage_componentes.csv")
+        for (item in tutorial) {
+            item.mnemonic = prefs.getString("mnemonic_${item.kanji}", "") ?: ""
+        }
+        _kanjis.clear()
+        _kanjis.addAll(tutorial)
+
+        val isTutorialDone = prefs.getBoolean("tutorial_completed", false)
+        val seenCount = prefs.getInt("seen_count", 10)
+        _seenKanjisCount.value = seenCount
+
+        if (isTutorialDone) {
+            _screenState.value = ScreenState.MAIN_HUB
+        } else {
+            _screenState.value = ScreenState.WELCOME
+        }
+    }
 
     fun startChallengeSetup() {
         _screenState.value = ScreenState.MNEMONIC_TRANSITION
     }
 
     fun proceedToMnemonicCreation() {
-        // Reload in case mnemonics were updated
-        loadData()
+        isGlobalChallengeMode = false
+        val tutorial = KanjiRepository.loadKanjis(getApplication(), "tutorial_kanji_damage_componentes.csv")
+        for (item in tutorial) {
+            item.mnemonic = prefs.getString("mnemonic_${item.kanji}", "") ?: ""
+        }
+        _kanjis.clear()
+        _kanjis.addAll(tutorial)
         _mnemonicIndex.value = 0
         _screenState.value = ScreenState.MNEMONIC_CREATION
     }
@@ -126,7 +167,14 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
         if (index + 1 < _kanjis.size) {
             _mnemonicIndex.value = index + 1
         } else {
-            _screenState.value = ScreenState.REVIEW_TRANSITION
+            if (_screenState.value == ScreenState.DISCOVER_MNEMONIC) {
+                val newSeen = (_seenKanjisCount.value + _kanjis.size).coerceAtMost(fullKanjiList.size)
+                _seenKanjisCount.value = newSeen
+                prefs.edit().putInt("seen_count", newSeen).apply()
+                goToMainHub()
+            } else {
+                _screenState.value = ScreenState.REVIEW_TRANSITION
+            }
         }
     }
 
@@ -179,6 +227,7 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
             challengeQueue.addAll(failedKanjis)
             failedKanjis.clear()
         }
+        initialChallengeQueueSize = challengeQueue.size.coerceAtLeast(1)
         nextChallengeStep()
     }
 
@@ -186,13 +235,23 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
         if (challengeQueue.isEmpty()) {
             if (_currentRound.value == 1) {
                 if (failedKanjis.isEmpty()) {
-                    _screenState.value = ScreenState.TUTORIAL_COMPLETED
+                    if (!isGlobalChallengeMode) {
+                        prefs.edit().putBoolean("tutorial_completed", true).apply()
+                        _screenState.value = ScreenState.TUTORIAL_COMPLETED
+                    } else {
+                        _screenState.value = ScreenState.VICTORY
+                    }
                 } else {
                     _screenState.value = ScreenState.ROUND_SUMMARY
                 }
             } else {
                 if (failedKanjis.isEmpty()) {
-                    _screenState.value = ScreenState.TUTORIAL_COMPLETED
+                    if (!isGlobalChallengeMode) {
+                        prefs.edit().putBoolean("tutorial_completed", true).apply()
+                        _screenState.value = ScreenState.TUTORIAL_COMPLETED
+                    } else {
+                        _screenState.value = ScreenState.VICTORY
+                    }
                 } else {
                     _totalFailedTotalCount.value = failedKanjis.sumOf { it.failCount }
                     _screenState.value = ScreenState.DEFEAT
@@ -224,7 +283,7 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
 
     private fun startGradePhase() {
         _screenState.value = ScreenState.CHALLENGE_GRADE
-        startTimer(gradeDurationSeconds) {
+        startTimer(2) {
             gradeKanji(remembered = false)
         }
     }
@@ -239,6 +298,117 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
         nextChallengeStep()
     }
 
+    fun goToMainHub() {
+        timerJob?.cancel()
+        isGlobalChallengeMode = false
+        _screenState.value = ScreenState.MAIN_HUB
+    }
+
+    // --- Global Review ("Revisar todos" - closable, with back & next) ---
+    fun startGlobalReview() {
+        timerJob?.cancel()
+        globalReviewList.clear()
+        val seenCount = _seenKanjisCount.value.coerceAtMost(fullKanjiList.size)
+        val seenList = fullKanjiList.take(seenCount)
+        for (item in seenList) {
+            item.mnemonic = prefs.getString("mnemonic_${item.kanji}", "") ?: ""
+        }
+        globalReviewList.addAll(seenList)
+        globalReviewCurrentIndex = 0
+        _screenState.value = ScreenState.GLOBAL_REVIEW
+        showGlobalReviewCard()
+    }
+
+    private fun showGlobalReviewCard() {
+        if (globalReviewList.isEmpty()) {
+            goToMainHub()
+            return
+        }
+        _currentKanji.value = globalReviewList[globalReviewCurrentIndex]
+    }
+
+    fun nextGlobalReviewCard() {
+        if (globalReviewCurrentIndex + 1 < globalReviewList.size) {
+            globalReviewCurrentIndex++
+            showGlobalReviewCard()
+        } else {
+            goToMainHub()
+        }
+    }
+
+    fun previousGlobalReviewCard() {
+        if (globalReviewCurrentIndex > 0) {
+            globalReviewCurrentIndex--
+            showGlobalReviewCard()
+        }
+    }
+
+    fun exitGlobalReview() {
+        goToMainHub()
+    }
+
+    // --- Desafiar-se (Global Challenge reusing Tutorial Challenge engine) ---
+    fun startGlobalChallenge() {
+        timerJob?.cancel()
+        isGlobalChallengeMode = true
+        val seenCount = _seenKanjisCount.value.coerceAtMost(fullKanjiList.size)
+        val seenList = fullKanjiList.take(seenCount)
+        if (seenList.isEmpty()) {
+            goToMainHub()
+            return
+        }
+        for (item in seenList) {
+            item.mnemonic = prefs.getString("mnemonic_${item.kanji}", "") ?: ""
+            item.failCount = 0
+        }
+        _kanjis.clear()
+        _kanjis.addAll(seenList)
+        startRound(1)
+    }
+
+    fun exitGlobalChallenge() {
+        timerJob?.cancel()
+        isGlobalChallengeMode = false
+        goToMainHub()
+    }
+
+    // --- Discover New Kanjis ("Continuar descobrindo") ---
+    fun startDiscovering() {
+        timerJob?.cancel()
+        isGlobalChallengeMode = false
+        val currentSeen = _seenKanjisCount.value
+        val nextBatch = fullKanjiList.drop(currentSeen).take(10)
+        if (nextBatch.isEmpty()) {
+            goToMainHub()
+            return
+        }
+        for (item in nextBatch) {
+            item.mnemonic = prefs.getString("mnemonic_${item.kanji}", "") ?: ""
+        }
+        _kanjis.clear()
+        _kanjis.addAll(nextBatch)
+        _mnemonicIndex.value = 0
+        _screenState.value = ScreenState.DISCOVER_MNEMONIC
+    }
+
+    fun exitDiscovery() {
+        timerJob?.cancel()
+        goToMainHub()
+    }
+
+    fun updateMnemonic(kanjiChar: String, newMnemonic: String) {
+        prefs.edit().putString("mnemonic_$kanjiChar", newMnemonic).apply()
+        fullKanjiList.find { it.kanji == kanjiChar }?.mnemonic = newMnemonic
+        _kanjis.find { it.kanji == kanjiChar }?.mnemonic = newMnemonic
+        _currentKanji.value?.let { if (it.kanji == kanjiChar) it.mnemonic = newMnemonic }
+    }
+
+    fun resetApp() {
+        timerJob?.cancel()
+        prefs.edit().clear().apply()
+        loadInitialData()
+    }
+
     private fun startTimer(seconds: Int, onTimeout: () -> Unit) {
         timerJob?.cancel()
         _timeLeft.value = seconds
@@ -249,15 +419,6 @@ class ChallengeViewModel(application: Application) : AndroidViewModel(applicatio
             }
             onTimeout()
         }
-    }
-
-    fun resetApp() {
-        timerJob?.cancel()
-        _kanjis.forEach { it.failCount = 0 }
-        failedKanjis.clear()
-        reviewQueue.clear()
-        challengeQueue.clear()
-        _screenState.value = ScreenState.WELCOME
     }
 
     override fun onCleared() {

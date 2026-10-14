@@ -6,10 +6,10 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 object KanjiRepository {
-    fun loadKanjis(context: Context): List<KanjiItem> {
+    fun loadKanjis(context: Context, fileName: String = "lista_kanji_damage_componentes.csv"): List<KanjiItem> {
         val list = mutableListOf<KanjiItem>()
         try {
-            val inputStream = context.assets.open("tutorial_kanji_damage_componentes.csv")
+            val inputStream = context.assets.open(fileName)
             val reader = BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8))
             val lines = reader.readLines()
             val dataLines = if (lines.isNotEmpty() && lines[0].startsWith("Kanji")) lines.drop(1) else lines

@@ -1,9 +1,10 @@
-- Mudança: adicionar botão "editar mnemonica", na tela de revisão, o que leva para a tela de edição daquele cartão em específico.
+- Mudança: Adicionar botão "editar mnemonica", na tela de revisão, o que leva para a tela de edição daquele cartão em específico.
 - Mudança: Deixar apenas o texto e o botão "Continuar desafio".
-- Criar tela que vem depois de clicar em "Continuar desafio". Vou chamar esta tela de "principal" e ela conterá opções: "continuar descobrindo", "revisar todos", "desafiar-se", e um botão para explicar sobre kanjis e a metodologia (que não funcionará por enquanto) e esta tela apresentará algum indicador de progresso.
-- Indicadores de progresso: número de kanjis vistos, número total de kanjis. Além disso, quero exibir uma arvore de sakura florescendo, usando as imagens presentes em "assets", através de uma mascara que vai sumindo conforme a pessoa conhece mais kanjis, e vai revelando mais e mais a arvore florescendo.
-- Após completado o tutorial, a pessoa para na tela "principal", sempre que inicia o app.
-- Na opção "Revisar todos" a pessoa entra no modo revisão vendo todos que foram vistos até agora. Mas dessa vez, diferente do tutorial, a pessoa pode fechar a revisão quando quiser para voltar a tela principal.
-- No botão "desafiar-se" a pessoa entra no modo de recall, onde ele tenta lembrar o que foi visto até agora, mostrando a frente do cartão, e em seguida o verso.
+- Criar tela principal: Vem depois de clicar em "Continuar desafio". Ela conterá opções: "continuar descobrindo", "revisar todos", "desafiar-se", e um botão para explicar sobre kanjis e a metodologia (que não funcionará por enquanto) e esta tela apresentará algum indicador de progresso.
+- - Continuar descobrindo: opção onde serão apresentados novos kanjis.
+- - Revisar todos: opção onde a pessoa revê todos kanjis que foram vistos até agora. Mas dessa vez, diferente do tutorial, a pessoa pode fechar a revisão quando quiser para voltar a tela principal.
+- - Desafiar-se: a pessoa entra no modo de recall, onde ele tenta lembrar o que foi visto até agora, mostrando a frente do cartão, e em seguida o verso.
+- - Indicadores de progresso: número de kanjis vistos, número total de kanjis. Além disso, quero exibir uma árvore de sakura florescendo, usando as imagens presentes em "assets", através de uma máscara que vai sumindo conforme a pessoa conhece mais kanjis, e vai revelando mais e mais a árvore florescendo.
 - - A revisão e o desafio foram separados na tela principal pois seria cansativo ter que passar pela revisão sempre que quisesse realizar o desafio dos kanjis que ja foram vistos.
+- Após completado o tutorial, a pessoa para na tela principal sempre que inicia o app.
 - A lista de kanji mais completa atualmente é a "lista_kanji_damage_componentes". Ela inclui os 10 primeiros kanjis visto no tutorial.
